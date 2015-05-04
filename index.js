@@ -8,28 +8,43 @@ module.exports = function (arr, prop) {
 
 	arr = arr.slice();
 
-	(Array.isArray(prop) ? prop : [prop]).forEach(function (el) {
-		arr.sort(function (a, b) {
+	arr.sort(function(a, b) {
+		var retNumber = 0;
+
+		(Array.isArray(prop) ? prop : [prop]).some(function (el) {
+			var newA;
+			var newB;
+
 			if (typeof el === 'function') {
-				a = el(a);
-				b = el(b);
+				newA = el(a);
+				newB = el(b);
+			} else if (typeof el === 'string') {
+				newA = dotPropGet(a, el);
+				newB = dotPropGet(b, el);
+			} else {
+				newA = clone(a);
+				newB = clone(b);
 			}
 
-			if (typeof el === 'string') {
-				a = dotPropGet(a, el);
-				b = dotPropGet(b, el);
+			if (typeof newA === 'string' && typeof newB === 'string') {
+				retNumber = newA.localeCompare(newB);
+				if (retNumber !== 0) {
+					return true;
+				}
 			}
 
-			if (typeof a === 'string' && typeof b === 'string') {
-				return a.localeCompare(b);
+			if (newA === newB) {
+				retNumber = 0;
+			} else if (newA < newB) {
+				retNumber = -1;
+				return true;
+			} else if (newA > newB) {
+				retNumber = 1;
+				return true;
 			}
-
-			if (a === b) {
-				return 0;
-			}
-
-			return a < b ? -1 : 1;
 		});
+
+		return retNumber;
 	});
 
 	return arr;
